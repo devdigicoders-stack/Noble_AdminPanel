@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F3C64B" />
+      <stop offset="50%" stop-color="#DFAC28" />
+      <stop offset="100%" stop-color="#BD8C16" />
+    </linearGradient>
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFDE6A" />
+      <stop offset="100%" stop-color="#C5961E" />
+    </linearGradient>
+  </defs>
+
+  <!-- Letter N -->
+  <text x="30" y="195" font-family="'Cinzel', 'Playfair Display', 'Times New Roman', serif" font-weight="900" font-size="205" fill="#131B4D">N</text>
+
+  <!-- Graphic 'O' with Towers -->
+  <g transform="translate(200, 15)">
+    <!-- Outer Navy Ring -->
+    <circle cx="100" cy="100" r="96" fill="#131B4D" />
+    <!-- Inner Cutout -->
+    <circle cx="100" cy="100" r="66" fill="#FFFFFF" />
+    
+    <!-- Building Towers in the Center (Gold & Navy combination) -->
+    <path d="M 50 185 L 50 115 L 98 45 L 98 185 Z" fill="url(#goldGrad)" />
+    <path d="M 85 64 L 98 45 L 98 185 L 85 185 Z" fill="#B38410" opacity="0.4" />
+
+    <path d="M 103 40 L 103 185 L 145 185 L 145 80 Z" fill="#131B4D" />
+    <path d="M 103 40 L 118 62 L 118 185 L 103 185 Z" fill="url(#goldLight)" />
+  </g>
+
+  <!-- Letter B -->
+  <text x="430" y="195" font-family="'Cinzel', 'Playfair Display', 'Times New Roman', serif" font-weight="900" font-size="205" fill="#131B4D">B</text>
+
+  <!-- Letter L -->
+  <text x="595" y="195" font-family="'Cinzel', 'Playfair Display', 'Times New Roman', serif" font-weight="900" font-size="205" fill="#131B4D">L</text>
+
+  <!-- Letter E -->
+  <text x="715" y="195" font-family="'Cinzel', 'Playfair Display', 'Times New Roman', serif" font-weight="900" font-size="205" fill="#131B4D">E</text>
+
+  <!-- Subtitle: Housekeeping Trading & Contracting -->
+  <text x="425" y="265" font-family="'Plus Jakarta Sans', 'Inter', 'Montserrat', sans-serif" font-weight="800" font-size="34" letter-spacing="1.5" fill="#000000" text-anchor="middle">
+    Housekeeping Trading &amp; Contracting
+  </text>
+</svg>

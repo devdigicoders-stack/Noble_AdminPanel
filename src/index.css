@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-navy: #0A1931;
+  --color-brand-navy-dark: #060E1E;
+  --color-brand-gold: #C5A059;
+  --color-brand-gold-light: #DFBF7A;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #F8F9FC;
+  color: #1E293B;
+}
+
+.gold-gradient {
+  background: linear-gradient(135deg, #C5A059 0%, #DFBF7A 50%, #C5A059 100%);
+}
+
+.gold-text-gradient {
+  background: linear-gradient(135deg, #C5A059 0%, #DFBF7A 50%, #C5A059 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

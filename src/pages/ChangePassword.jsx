@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Key, CheckCircle, AlertCircle, Save, Loader2, ShieldCheck } from 'lucide-react';
 
+import { Toast } from '../utils/alerts';
+
 export default function ChangePassword() {
   const { changePassword } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
@@ -17,12 +19,16 @@ export default function ChangePassword() {
     setError('');
 
     if (newPassword !== confirmPassword) {
-      setError('New password and confirm password do not match');
+      const err = 'New password and confirm password do not match';
+      setError(err);
+      Toast.fire({ icon: 'warning', title: err });
       return;
     }
 
     if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters');
+      const err = 'New password must be at least 6 characters';
+      setError(err);
+      Toast.fire({ icon: 'warning', title: err });
       return;
     }
 
@@ -30,12 +36,16 @@ export default function ChangePassword() {
 
     try {
       await changePassword(currentPassword, newPassword);
-      setMessage('Password changed successfully! Please use your new password next time.');
+      const succ = 'Password changed successfully! Please use your new password next time.';
+      setMessage(succ);
+      Toast.fire({ icon: 'success', title: 'Password updated successfully' });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setError(err.message || 'Failed to change password');
+      const errMsg = err.message || 'Failed to change password';
+      setError(errMsg);
+      Toast.fire({ icon: 'error', title: errMsg });
     } finally {
       setLoading(false);
     }

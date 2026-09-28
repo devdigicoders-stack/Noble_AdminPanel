@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { User, Mail, Shield, CheckCircle, AlertCircle, Save, Loader2 } from 'lucide-react';
 
+import { Toast } from '../utils/alerts';
+
 export default function Profile() {
   const { admin, updateProfile } = useAuth();
   const [name, setName] = useState(admin?.name || '');
@@ -26,8 +28,16 @@ export default function Profile() {
     try {
       await updateProfile(name, email);
       setMessage('Profile updated successfully!');
+      Toast.fire({
+        icon: 'success',
+        title: 'Profile updated successfully'
+      });
     } catch (err) {
       setError(err.message || 'Failed to update profile');
+      Toast.fire({
+        icon: 'error',
+        title: err.message || 'Failed to update profile'
+      });
     } finally {
       setLoading(false);
     }

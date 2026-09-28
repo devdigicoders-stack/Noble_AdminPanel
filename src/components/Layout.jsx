@@ -6,13 +6,26 @@ import {
   ChevronRight, Building2, CheckCircle2
 } from 'lucide-react';
 
+import { confirmModal, Toast } from '../utils/alerts';
+
 export default function Layout() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
+  const handleLogout = async () => {
+    const res = await confirmModal({
+      title: 'Logout Session?',
+      text: 'Are you sure you want to log out from the Admin Portal?',
+      confirmButtonText: 'Yes, Logout',
+      icon: 'question'
+    });
+
+    if (res.isConfirmed) {
       logout();
+      Toast.fire({
+        icon: 'success',
+        title: 'Logged out successfully'
+      });
       navigate('/login');
     }
   };
@@ -26,9 +39,9 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-[#F8F9FC] flex flex-col md:flex-row">
       
-      {/* Sidebar Navigation */}
-      <aside className="w-full md:w-72 bg-[#0A1931] text-white flex flex-col justify-between shrink-0 border-r border-slate-800 shadow-2xl">
-        <div>
+      {/* Fixed/Sticky Sidebar Navigation */}
+      <aside className="w-full md:w-72 md:h-screen md:sticky md:top-0 bg-[#0A1931] text-white flex flex-col justify-between shrink-0 border-r border-slate-800 shadow-2xl z-40">
+        <div className="flex-1 overflow-y-auto">
           
           {/* Brand Header */}
           <div className="p-6 border-b border-slate-800">
@@ -75,9 +88,9 @@ export default function Layout() {
           </nav>
 
           {/* Website Quick Link */}
-          <div className="px-4 pt-2">
+          <div className="px-4 pt-2 mb-4">
             <a
-              href="http://localhost:5173"
+              href="https://noble-housing-website.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-slate-700/60 text-slate-300 text-xs font-semibold transition"
@@ -92,7 +105,7 @@ export default function Layout() {
         </div>
 
         {/* User Card & Logout Bottom */}
-        <div className="p-4 border-t border-slate-800 space-y-3">
+        <div className="p-4 border-t border-slate-800 space-y-3 bg-[#0A1931] shrink-0">
           <div className="p-3 rounded-2xl bg-white/5 border border-slate-700/60 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full gold-gradient text-[#0A1931] font-extrabold flex items-center justify-center text-sm shadow-md shrink-0">
               {admin?.name?.charAt(0) || 'A'}
@@ -114,8 +127,8 @@ export default function Layout() {
 
       </aside>
 
-      {/* Main Content View */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      {/* Main Content View (Entire screen scrolls smoothly) */}
+      <main className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
           <div>
             <h2 className="text-lg font-extrabold text-[#0A1931]">Noble Housekeeping &amp; Contracting</h2>

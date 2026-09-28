@@ -3,8 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Inbox, Search, Filter, Phone, MessageSquare, Calendar, 
   Trash2, Edit3, CheckCircle, Clock, XCircle, RefreshCw,
-  Eye, AlertCircle, Sparkles, User, Tag
+  Eye, AlertCircle, Sparkles, User, Tag, ChevronLeft, ChevronRight as ChevronRightIcon
 } from 'lucide-react';
+import { Toast, confirmModal } from '../utils/alerts';
 
 export default function Enquiries() {
   const { token, API_URL } = useAuth();
@@ -18,10 +19,16 @@ export default function Enquiries() {
   const [stats, setStats] = useState({ total: 0, new: 0, contacted: 0, completed: 0 });
   const [saving, setSaving] = useState(false);
 
-  const fetchEnquiries = async () => {
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const limit = 10;
+
+  const fetchEnquiries = async (page = currentPage) => {
     setLoading(true);
     try {
-      let url = `${API_URL}/enquiries?search=${encodeURIComponent(search)}`;
+      let url = `${API_URL}/enquiries?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`;
       if (statusFilter !== 'All') url += `&status=${statusFilter}`;
 
       const res = await fetch(url, {
@@ -32,6 +39,11 @@ export default function Enquiries() {
       const data = await res.json();
       if (data.success) {
         setEnquiries(data.data);
+        if (data.pagination) {
+          setCurrentPage(data.pagination.page);
+          setTotalPages(data.pagination.pages || 1);
+          setTotalCount(data.pagination.total || 0);
+        }
         if (data.stats) setStats(data.stats);
       }
     } catch (err) {
@@ -42,12 +54,22 @@ export default function Enquiries() {
   };
 
   useEffect(() => {
-    fetchEnquiries();
+    setCurrentPage(1);
+    fetchEnquiries(1);
   }, [statusFilter]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    fetchEnquiries();
+    setCurrentPage(1);
+    fetchEnquiries(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchEnquiries(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleUpdate = async (id, newStatus, newNotes) => {
@@ -65,17 +87,36 @@ export default function Enquiries() {
       if (data.success) {
         setEnquiries((prev) => prev.map((item) => (item._id === id ? data.data : item)));
         setSelectedEnquiry(null);
-        fetchEnquiries();
+        fetchEnquiries(currentPage);
+        Toast.fire({
+          icon: 'success',
+          title: 'Enquiry updated successfully'
+        });
+      } else {
+        Toast.fire({
+          icon: 'error',
+          title: data.message || 'Failed to update enquiry'
+        });
       }
     } catch (err) {
-      alert('Failed to update enquiry: ' + err.message);
+      Toast.fire({
+        icon: 'error',
+        title: 'Failed to update enquiry: ' + err.message
+      });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this enquiry record?')) return;
+    const resConfirm = await confirmModal({
+      title: 'Delete Enquiry Record?',
+      text: 'Are you sure you want to permanently delete this enquiry record?',
+      confirmButtonText: 'Yes, Delete',
+      icon: 'warning'
+    });
+
+    if (!resConfirm.isConfirmed) return;
 
     try {
       const res = await fetch(`${API_URL}/enquiries/${id}`, {
@@ -90,32 +131,44 @@ export default function Enquiries() {
         if (selectedEnquiry && selectedEnquiry._id === id) {
           setSelectedEnquiry(null);
         }
-        fetchEnquiries();
+        fetchEnquiries(currentPage);
+        Toast.fire({
+          icon: 'success',
+          title: 'Enquiry deleted successfully'
+        });
+      } else {
+        Toast.fire({
+          icon: 'error',
+          title: data.message || 'Failed to delete enquiry'
+        });
       }
     } catch (err) {
-      alert('Failed to delete enquiry: ' + err.message);
+      Toast.fire({
+        icon: 'error',
+        title: 'Failed to delete enquiry: ' + err.message
+      });
     }
   };
 
   const getStatusBadge = (status) => {
     switch (status) {
       case 'New':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1"><Clock className="w-3 h-3" /> New</span>;
+        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200"><Clock className="w-3 h-3" /> New</span>;
       case 'Contacted':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1"><Phone className="w-3 h-3" /> Contacted</span>;
+        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200"><Phone className="w-3 h-3" /> Contacted</span>;
       case 'In Progress':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1"><RefreshCw className="w-3 h-3" /> In Progress</span>;
+        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200"><RefreshCw className="w-3 h-3" /> In Progress</span>;
       case 'Completed':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Completed</span>;
+        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><CheckCircle className="w-3 h-3" /> Completed</span>;
       case 'Cancelled':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1"><XCircle className="w-3 h-3" /> Cancelled</span>;
+        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200"><XCircle className="w-3 h-3" /> Cancelled</span>;
       default:
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">{status}</span>;
+        return <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">{status}</span>;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       
       {/* Top Metrics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -174,7 +227,7 @@ export default function Enquiries() {
             </button>
           ))}
           <button
-            onClick={fetchEnquiries}
+            onClick={() => fetchEnquiries(currentPage)}
             className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-[#0A1931] transition"
             title="Refresh list"
           >
@@ -201,107 +254,142 @@ export default function Enquiries() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                  <th className="p-4 pl-6">Client Name</th>
-                  <th className="p-4">Contact Phone</th>
-                  <th className="p-4">Service Required</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Date &amp; Time</th>
-                  <th className="p-4 pr-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {enquiries.map((item) => (
-                  <tr key={item._id} className="hover:bg-slate-50/80 transition-colors">
-                    
-                    {/* Name */}
-                    <td className="p-4 pl-6 font-bold text-[#0A1931]">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full gold-gradient text-[#0A1931] font-extrabold flex items-center justify-center text-xs shrink-0">
-                          {item.name?.charAt(0) || 'U'}
-                        </div>
-                        <div>
-                          <div className="font-extrabold text-slate-900">{item.name}</div>
-                          {item.notes && <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Has Notes</span>}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Phone */}
-                    <td className="p-4 font-semibold text-slate-700">
-                      <div className="flex items-center gap-2">
-                        <span>{item.phone}</span>
-                        <a
-                          href={`tel:${item.phone.replace(/\s+/g, '')}`}
-                          className="p-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100"
-                          title="Direct Call"
-                        >
-                          <Phone className="w-3 h-3" />
-                        </a>
-                        <a
-                          href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(item.name)},%20Thank%20you%20for%20contacting%20Noble%20Housekeeping%20Qatar.`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                          title="WhatsApp Reply"
-                        >
-                          <MessageSquare className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </td>
-
-                    {/* Service */}
-                    <td className="p-4">
-                      <span className="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-200/80">
-                        {item.service}
-                      </span>
-                    </td>
-
-                    {/* Status */}
-                    <td className="p-4">
-                      {getStatusBadge(item.status)}
-                    </td>
-
-                    {/* Date */}
-                    <td className="p-4 text-slate-500 font-medium">
-                      {new Date(item.createdAt).toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="p-4 pr-6 text-right space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedEnquiry(item);
-                          setEditStatus(item.status);
-                          setEditNotes(item.notes || '');
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-[#0A1931] text-[#DFBF7A] hover:bg-[#152A4A] font-bold text-xs transition inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <Eye className="w-3 h-3" />
-                        <span>View / Edit</span>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item._id)}
-                        className="p-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition inline-block cursor-pointer"
-                        title="Delete record"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-
+          <div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                    <th className="p-4 pl-6 whitespace-nowrap">Client Name</th>
+                    <th className="p-4 whitespace-nowrap">Contact Details</th>
+                    <th className="p-4 whitespace-nowrap">Service Required</th>
+                    <th className="p-4 whitespace-nowrap">Status</th>
+                    <th className="p-4 whitespace-nowrap">Date &amp; Time</th>
+                    <th className="p-4 pr-6 text-right whitespace-nowrap">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {enquiries.map((item) => (
+                    <tr key={item._id} className="hover:bg-slate-50/80 transition-colors">
+                      
+                      {/* Name */}
+                      <td className="p-4 pl-6 font-bold text-[#0A1931]">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full gold-gradient text-[#0A1931] font-extrabold flex items-center justify-center text-xs shrink-0 shadow-sm">
+                            {item.name?.charAt(0) || 'U'}
+                          </div>
+                          <div>
+                            <div className="font-extrabold text-slate-900 whitespace-nowrap">{item.name}</div>
+                            {item.notes && <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Has Notes</span>}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Phone & Direct channels */}
+                      <td className="p-4 font-semibold text-slate-700">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <span className="font-bold">{item.phone}</span>
+                          <a
+                            href={`tel:${item.phone.replace(/\s+/g, '')}`}
+                            className="p-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+                            title="Direct Phone Call"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                          </a>
+                          <a
+                            href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(item.name)},%20Thank%20you%20for%20contacting%20Noble%20Housekeeping%20Qatar.`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition"
+                            title="WhatsApp Reply"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </td>
+
+                      {/* Service */}
+                      <td className="p-4">
+                        <span className="inline-block px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-200/80 whitespace-nowrap">
+                          {item.service}
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="p-4 whitespace-nowrap">
+                        {getStatusBadge(item.status)}
+                      </td>
+
+                      {/* Date */}
+                      <td className="p-4 text-slate-500 font-medium whitespace-nowrap">
+                        {new Date(item.createdAt).toLocaleDateString('en-GB', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </td>
+
+                      {/* Actions in one neat horizontal flex line */}
+                      <td className="p-4 pr-6 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedEnquiry(item);
+                              setEditStatus(item.status);
+                              setEditNotes(item.notes || '');
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-[#0A1931] text-[#DFBF7A] hover:bg-[#152A4A] font-bold text-xs transition inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>View / Edit</span>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item._id)}
+                            className="p-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100 transition inline-flex items-center justify-center cursor-pointer shadow-sm"
+                            title="Delete record"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls Bar */}
+            <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-slate-500 font-medium">
+                Showing <span className="font-bold text-slate-800">{enquiries.length > 0 ? (currentPage - 1) * limit + 1 : 0}</span> to <span className="font-bold text-slate-800">{Math.min(currentPage * limit, totalCount)}</span> of <span className="font-bold text-slate-800">{totalCount}</span> total enquiries
+              </div>
+
+              <div className="inline-flex items-center gap-1.5">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1 || loading}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition inline-flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Previous</span>
+                </button>
+
+                <div className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl">
+                  Page {currentPage} of {totalPages}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages || loading}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition inline-flex items-center gap-1"
+                >
+                  <span>Next</span>
+                  <ChevronRightIcon className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

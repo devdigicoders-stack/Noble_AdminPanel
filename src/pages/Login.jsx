@@ -37,7 +37,7 @@ export default function Login() {
         {/* Logo Card */}
         <div className="text-center mb-8 space-y-3">
           <div className="inline-block bg-white p-4 rounded-3xl shadow-2xl border border-slate-200">
-            <img src="/logo.svg" alt="Noble Housekeeping" className="h-12 w-auto object-contain mx-auto" />
+            <img src="/logo.png" alt="Noble Housekeeping" className="h-12 w-auto object-contain mx-auto" />
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">Admin Portal</h1>

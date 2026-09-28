@@ -46,7 +46,7 @@ export default function Layout() {
           {/* Brand Header */}
           <div className="p-6 border-b border-slate-800">
             <div className="bg-white p-2.5 rounded-2xl inline-block shadow-md">
-              <img src="/logo.svg" alt="Noble Housekeeping" className="h-9 w-auto object-contain" />
+              <img src="/logo.png" alt="Noble Housekeeping" className="h-9 w-auto object-contain" />
             </div>
             <div className="mt-3">
               <div className="flex items-center gap-1.5">
